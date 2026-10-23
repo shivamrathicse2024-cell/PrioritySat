@@ -1,0 +1,869 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>PrioritySat — Orbital Operations Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-background": "#e0e8f0",
+            "error": "#ff6b6b",
+            "on-secondary-fixed": "#0d1f2b",
+            "surface-variant": "#1a2438",
+            "on-error-container": "#ffb3b3",
+            "on-secondary-fixed-variant": "#2a4a5e",
+            "surface-container-low": "#111828",
+            "tertiary-container": "#3d2060",
+            "surface-container": "#141c2e",
+            "surface-tint": "#7dd3fc",
+            "primary": "#7dd3fc",
+            "on-primary-container": "#c8eaff",
+            "outline": "#4a6070",
+            "on-tertiary-container": "#e8d0ff",
+            "surface-container-high": "#1a2438",
+            "on-tertiary-fixed-variant": "#4d2a73",
+            "surface-container-lowest": "#0a0e1a",
+            "secondary-container": "#1a3a4e",
+            "tertiary-fixed-dim": "#c8a0f0",
+            "on-surface": "#e0e8f0",
+            "tertiary": "#c8a0f0",
+            "inverse-surface": "#e0e8f0",
+            "inverse-primary": "#0a4c6e",
+            "primary-fixed-dim": "#7dd3fc",
+            "on-surface-variant": "#a0b4c4",
+            "primary-fixed": "#c8eaff",
+            "on-primary-fixed-variant": "#004d73",
+            "surface-dim": "#0f1524",
+            "error-container": "#3d1414",
+            "on-tertiary-fixed": "#1a002e",
+            "secondary-fixed": "#c0d8e8",
+            "on-tertiary": "#1a002e",
+            "outline-variant": "#2a3a48",
+            "tertiary-fixed": "#e8d0ff",
+            "background": "#0a0e1a",
+            "primary-container": "#0e4d6e",
+            "inverse-on-surface": "#0a0e1a",
+            "surface": "#0f1524",
+            "surface-container-highest": "#202c42",
+            "on-secondary-container": "#c0d8e8",
+            "on-secondary": "#001f2e",
+            "on-primary-fixed": "#001f2e",
+            "secondary-fixed-dim": "#88b4cc",
+            "secondary": "#88b4cc",
+            "on-primary": "#001f2e",
+            "surface-bright": "#1a2438",
+            "on-error": "#1a0000"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.5rem",
+            "lg": "1rem",
+            "xl": "1.5rem",
+            "full": "9999px"
+          },
+          "fontFamily": {
+            "headline": ["Inter"],
+            "display": ["Inter"],
+            "body": ["Inter"],
+            "label": ["Inter"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .glass-panel {
+      background: rgba(15, 21, 36, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(125, 211, 252, 0.1);
+    }
+    .glass-panel-elevated {
+      background: rgba(20, 28, 46, 0.75);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(125, 211, 252, 0.15);
+      box-shadow: 0 0 30px rgba(125, 211, 252, 0.05);
+    }
+    .glow-accent {
+      box-shadow: 0 0 20px rgba(125, 211, 252, 0.15);
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(10, 14, 26, 0.5);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(125, 211, 252, 0.2);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(125, 211, 252, 0.4);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body min-h-screen flex flex-col overflow-x-hidden" x-data="{ currentTab: 'Dashboard', sidebarOpen: true, apiInspectorOpen: false }">
+<!-- Top App Bar -->
+<header class="bg-surface/60 backdrop-blur-md text-on-surface font-headline border-b border-primary/10 shadow-[0_0_30px_rgba(125,211,252,0.05)] transition-all duration-200 flex justify-between items-center w-full px-6 h-16 fixed top-0 z-50">
+<div class="flex items-center space-x-4">
+<button @click="sidebarOpen = !sidebarOpen" class="text-on-surface-variant hover:text-primary transition-colors p-2 rounded-lg hover:bg-surface-variant">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-primary text-2xl">satellite_alt</span>
+<span class="text-lg font-bold text-primary tracking-wide">PrioritySat Orbital Operations Center</span>
+</div>
+<div class="hidden xl:flex items-center space-x-2 bg-primary/10 border border-primary/20 px-3 py-1 rounded-full text-xs text-primary">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="font-mono">OFFLINE / DEMO MODE</span>
+</div>
+</div>
+<!-- Navigation links (Desktop) -->
+<nav class="hidden md:flex items-center space-x-1">
+<template x-for="tab in ['Dashboard', 'Constellation', 'Simulation', 'Activity Log']">
+<button :class="(currentTab === tab || (tab === 'Constellation' &amp;&amp; currentTab === 'Constellation Map') || (tab === 'Dashboard' &amp;&amp; currentTab === 'Dashboard') || (tab === 'Simulation' &amp;&amp; currentTab === 'Simulation Lab') || (tab === 'Activity Log' &amp;&amp; currentTab === 'Activity Log')) ? 'text-primary font-semibold bg-primary/10' : 'text-on-surface-variant hover:text-primary'" @click="currentTab = tab === 'Constellation' ? 'Constellation Map' : (tab === 'Dashboard' ? 'Dashboard' : (tab === 'Simulation' ? 'Simulation Lab' : 'Activity Log'))" class="px-4 py-2 rounded-lg text-sm transition-all duration-200">
+<span x-text="tab"></span>
+</button>
+</template>
+</nav>
+<!-- Actions & Profile -->
+<div class="flex items-center space-x-3">
+<button @click="apiInspectorOpen = !apiInspectorOpen" class="hidden sm:flex items-center space-x-1 bg-surface-variant/80 hover:bg-surface-variant text-primary px-3 py-1.5 rounded-lg text-xs border border-primary/20 transition-colors">
+<span class="material-symbols-outlined text-sm">code</span>
+<span class="">API Inspector</span>
+</button>
+<button class="bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all">Launch Sim</button>
+<button class="text-on-surface-variant hover:text-primary p-2 rounded-lg transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="text-on-surface-variant hover:text-primary p-2 rounded-lg transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="h-6 w-[1px] bg-outline/30 mx-1"></div>
+<div class="flex items-center space-x-2">
+<div class="w-8 h-8 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center text-primary font-bold text-xs" data-alt="A detailed portrait of a futuristic space mission commander in an advanced operations center, rendered in Glacier glassmorphism style with ice-blue lighting and deep navy tones." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAt322T_0nZ16tRzLWZiBEnb508ju6CHvDJhpxNRleWXun6nl17A52PPUTMmDVt0LaT4AfzRXgiFd_kQya6b7S8G28CvUbLssmoehZ5kqpS1Gl1CYtCdcrCzirkJrfPEg1P5uLgFEaaL-HUMxwwyAFMsCc13yLJvM6iV0Yqmm99xEM14wQQcUWI8BcWyI_2sFUMRS1eBT4C_R9H7lVRB7zEJwxs98W7Y3a0ys8ammkEZkOrGUaoc2NZ')">
+<span class="material-symbols-outlined text-sm">person</span>
+</div>
+</div>
+</div>
+</header>
+<div class="flex pt-16 flex-1 relative">
+<!-- Side Navigation Bar -->
+<aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-20'" class="fixed md:sticky top-16 z-40 h-[calc(100vh-4rem)] bg-surface/75 backdrop-blur-xl border-r border-primary/10 shadow-[0_0_30px_rgba(125,211,252,0.05)] transition-all duration-300 flex flex-col justify-between p-4 w-64">
+<div class="space-y-6">
+<!-- Header info inside side nav -->
+<div :class="sidebarOpen ? 'block' : 'md:hidden'" class="hidden md:block px-2 py-1">
+<div class="text-xs text-on-surface-variant font-mono">UTC 14:45:22</div>
+<div class="text-xs text-primary font-semibold mt-0.5 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+            System Normal
+          </div>
+</div>
+<!-- Navigation Tabs -->
+<nav class="space-y-1.5">
+<template x-for="(label, idx) in ['Dashboard', 'Constellation Map', 'Route Planner', 'Simulation Lab', 'Activity Log']">
+<button :class="currentTab === label ? 'bg-primary-container text-on-primary-container rounded-xl font-semibold shadow-sm' : 'text-on-surface-variant hover:bg-surface-variant hover:text-on-surface rounded-xl'" @click="currentTab = label" class="w-full flex items-center space-x-3 px-3.5 py-2.5 text-sm transition-all duration-200">
+<span class="material-symbols-outlined text-lg" x-text="['dashboard', 'public', 'map', 'science', 'history'][idx]"></span>
+<span class="truncate" x-show="sidebarOpen" x-text="label"></span>
+</button>
+</template>
+</nav>
+</div>
+<!-- Footer Nav & Status -->
+<div class="space-y-2 pt-4 border-t border-outline/20">
+<button :class="currentTab === 'Settings' ? 'bg-primary-container text-on-primary-container rounded-xl font-semibold' : 'text-on-surface-variant hover:bg-surface-variant hover:text-on-surface rounded-xl'" @click="currentTab = 'Settings'" class="w-full flex items-center space-x-3 px-3.5 py-2 text-sm transition-all duration-200">
+<span class="material-symbols-outlined text-lg">settings</span>
+<span x-show="sidebarOpen" class="">Settings</span>
+</button>
+<button class="w-full flex items-center space-x-3 px-3.5 py-2 text-sm text-on-surface-variant hover:bg-surface-variant hover:text-on-surface rounded-xl transition-all duration-200">
+<span class="material-symbols-outlined text-lg">help</span>
+<span x-show="sidebarOpen" class="">Help</span>
+</button>
+<div class="pt-2 px-1" x-show="sidebarOpen">
+<div class="bg-surface-variant/50 p-2.5 rounded-lg border border-primary/10 text-xs">
+<div class="text-on-surface-variant flex justify-between">
+<span class="">Backend Status</span>
+<span class="text-error font-mono">OFFLINE</span>
+</div>
+<div class="text-[10px] text-primary/70 mt-1">Mock FastAPI client active</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 p-6 md:p-8 overflow-y-auto max-w-full">
+<!-- ================= MISSION OVERVIEW TAB ================= -->
+<div class="space-y-6" x-show="currentTab === 'Dashboard'">
+<!-- Top banner / Hero -->
+<div class="glass-panel-elevated rounded-xl p-6 relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<div class="absolute -right-10 -bottom-10 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
+<div>
+<div class="flex items-center space-x-2">
+<span class="bg-primary/20 text-primary text-[10px] uppercase font-mono px-2 py-0.5 rounded border border-primary/30">DEMO DATA</span>
+<span class="text-xs text-on-surface-variant">UTC 14:45:22 • PrioritySat Core v4.8</span>
+</div>
+<h1 class="text-2xl font-bold font-headline text-on-surface mt-1">Mission Overview &amp; Telemetry</h1>
+<p class="text-sm text-on-surface-variant mt-1">Real-time constellation status, link health, and operational readiness across global ground segments.</p>
+</div>
+<div class="flex items-center space-x-3">
+<button @click="currentTab = 'Constellation Map'" class="bg-primary hover:bg-primary/90 text-on-primary font-semibold px-4 py-2 rounded-lg text-sm transition-all flex items-center space-x-2">
+<span class="material-symbols-outlined text-base">public</span>
+<span class="">Open Constellation Map</span>
+</button>
+</div>
+</div>
+<!-- Metric Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Card 1 -->
+<div class="glass-panel rounded-xl p-5 relative">
+<div class="flex justify-between items-start">
+<div>
+<span class="text-xs text-on-surface-variant uppercase tracking-wider font-mono">Network Health</span>
+<div class="text-3xl font-bold font-headline text-primary mt-1">99.8%</div>
+</div>
+<span class="bg-primary/10 text-primary p-2 rounded-lg material-symbols-outlined">health_metrics</span>
+</div>
+<div class="mt-4 flex items-center justify-between text-xs">
+<span class="text-emerald-400 flex items-center gap-0.5"><span class="material-symbols-outlined text-sm">trending_up</span> +0.2% vs avg</span>
+<span class="bg-primary/20 text-primary px-1.5 py-0.5 rounded text-[10px] font-mono">DEMO</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="glass-panel rounded-xl p-5 relative">
+<div class="flex justify-between items-start">
+<div>
+<span class="text-xs text-on-surface-variant uppercase tracking-wider font-mono">Active Satellites</span>
+<div class="text-3xl font-bold font-headline text-on-surface mt-1">48</div>
+</div>
+<span class="bg-secondary/10 text-secondary p-2 rounded-lg material-symbols-outlined">satellite</span>
+</div>
+<div class="mt-4 flex items-center justify-between text-xs">
+<span class="text-on-surface-variant">32 LEO / 12 MEO / 4 GEO</span>
+<span class="bg-primary/20 text-primary px-1.5 py-0.5 rounded text-[10px] font-mono">DEMO</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="glass-panel rounded-xl p-5 relative">
+<div class="flex justify-between items-start">
+<div>
+<span class="text-xs text-on-surface-variant uppercase tracking-wider font-mono">Avg Latency</span>
+<div class="text-3xl font-bold font-headline text-tertiary mt-1">24.3ms</div>
+</div>
+<span class="bg-tertiary/10 text-tertiary p-2 rounded-lg material-symbols-outlined">speed</span>
+</div>
+<div class="mt-4 flex items-center justify-between text-xs">
+<span class="text-emerald-400 flex items-center gap-0.5"><span class="material-symbols-outlined text-sm">trending_down</span> -1.2ms</span>
+<span class="bg-primary/20 text-primary px-1.5 py-0.5 rounded text-[10px] font-mono">DEMO</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="glass-panel rounded-xl p-5 relative">
+<div class="flex justify-between items-start">
+<div>
+<span class="text-xs text-on-surface-variant uppercase tracking-wider font-mono">Availability</span>
+<div class="text-3xl font-bold font-headline text-primary mt-1">99.95%</div>
+</div>
+<span class="bg-primary/10 text-primary p-2 rounded-lg material-symbols-outlined">verified</span>
+</div>
+<div class="mt-4 flex items-center justify-between text-xs">
+<span class="text-on-surface-variant">SLA Target: 99.9%</span>
+<span class="bg-primary/20 text-primary px-1.5 py-0.5 rounded text-[10px] font-mono">DEMO</span>
+</div>
+</div>
+</div>
+<!-- Main Bento Grid for Dashboard -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Interactive Constellation Map Preview -->
+<div class="glass-panel rounded-xl p-6 lg:col-span-2 flex flex-col justify-between">
+<div class="flex justify-between items-center mb-4">
+<div>
+<h3 class="font-headline font-bold text-lg text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">public</span>
+                  Global Constellation Matrix
+                </h3>
+<p class="text-xs text-on-surface-variant">Live orbital plane tracks and ground station connectivity links</p>
+</div>
+<div class="flex space-x-2">
+<span class="bg-surface-variant px-2.5 py-1 rounded-lg text-xs text-primary font-mono border border-primary/20">LEO/MEO/GEO</span>
+</div>
+</div>
+<!-- Simulated Map Area -->
+<div class="relative w-full h-80 rounded-lg overflow-hidden bg-surface-container-lowest border border-primary/10 flex items-center justify-center" data-alt="A detailed digital world map showing orbital satellite tracks and ground station nodes in glowing ice-blue and navy tones, rendered in Glacier glassmorphism style." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDbzTNANQ1cPVCPpQ_I6rJLZh-D1WNz5Ry4y6i34N_VVQqpzdyC5L-gTasHU37Hlh1klOCXpXN3-0LP6gbVccSZCWvcgFpng0ZSlPDoBuq85qHjzkf0AC9jopEIYmTi3SNh1zymnYBBJrabYXhd6ji_ePW3ikt5OCtP8eqMVdL5oCXgTPfY5E7gSRdnRbSMgbWhhwpDGRFpRHkUcGfGXvLIExW7nRxpo2-RaMPBiCey8zEP_LNQopMR')">
+<div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-surface-container-lowest"></div>
+<!-- Simulated nodes -->
+<div class="absolute top-1/4 left-1/3 flex flex-col items-center group cursor-pointer">
+<div class="w-3 h-3 bg-primary rounded-full animate-ping absolute"></div>
+<div class="w-3 h-3 bg-primary rounded-full shadow-[0_0_10px_#7dd3fc]"></div>
+<span class="text-[10px] font-mono text-primary bg-surface/80 px-1 rounded mt-1">SAT-LEO-408</span>
+</div>
+<div class="absolute top-1/2 left-2/3 flex flex-col items-center group cursor-pointer">
+<div class="w-2.5 h-2.5 bg-tertiary rounded-full shadow-[0_0_10px_#c8a0f0]"></div>
+<span class="text-[10px] font-mono text-tertiary bg-surface/80 px-1 rounded mt-1">SAT-MEO-102</span>
+</div>
+<div class="absolute bottom-1/4 left-1/4 flex flex-col items-center group cursor-pointer">
+<div class="w-4 h-4 bg-emerald-400 rounded-sm shadow-[0_0_10px_#34d399] flex items-center justify-center text-[9px] text-background font-bold">GS</div>
+<span class="text-[10px] font-mono text-emerald-400 bg-surface/80 px-1 rounded mt-1">GS-SVALBARD</span>
+</div>
+<div class="absolute bottom-4 left-4 bg-surface/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-primary/20 text-xs flex items-center space-x-3">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-primary"></span> LEO</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-tertiary"></span> MEO</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Ground</span>
+</div>
+</div>
+<div class="mt-4 flex justify-between items-center text-xs text-on-surface-variant">
+<span class="">Status: Synchronized with NORAD TLE Feed #8942</span>
+<button @click="currentTab = 'Constellation Map'" class="text-primary hover:underline flex items-center gap-1">
+                Expand Interactive View <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Recent Alerts & System Activity -->
+<div class="glass-panel rounded-xl p-6 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-headline font-bold text-base text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-error">warning</span>
+                  Recent Alerts
+                </h3>
+<span class="bg-error/20 text-error text-[10px] font-mono px-2 py-0.5 rounded">3 Active</span>
+</div>
+<div class="space-y-3">
+<div class="bg-surface-variant/50 p-3 rounded-lg border border-error/20">
+<div class="flex justify-between items-start text-xs">
+<span class="font-mono font-bold text-error">WARN [ORBIT-04]</span>
+<span class="text-on-surface-variant">14:42:01 UTC</span>
+</div>
+<p class="text-xs text-on-surface mt-1">Conjunction warning trajectory shift for SAT-LEO-219. Avoidance burn queued.</p>
+</div>
+<div class="bg-surface-variant/50 p-3 rounded-lg border border-primary/20">
+<div class="flex justify-between items-start text-xs">
+<span class="font-mono font-bold text-primary">INFO [GS-SYNC]</span>
+<span class="text-on-surface-variant">14:38:15 UTC</span>
+</div>
+<p class="text-xs text-on-surface mt-1">Ground station Svalbard primary downlink link re-established successfully.</p>
+</div>
+<div class="bg-surface-variant/50 p-3 rounded-lg border border-tertiary/20">
+<div class="flex justify-between items-start text-xs">
+<span class="font-mono font-bold text-tertiary">INFO [ROUTE]</span>
+<span class="text-on-surface-variant">14:30:00 UTC</span>
+</div>
+<p class="text-xs text-on-surface mt-1">Quantum-resistant encryption keys rotated across all active MEO nodes.</p>
+</div>
+</div>
+</div>
+<button @click="currentTab = 'Activity Log'" class="w-full mt-4 bg-surface-variant hover:bg-surface-variant/80 text-primary py-2 rounded-lg text-xs font-semibold transition-all border border-primary/20">
+              View Complete Activity Log
+            </button>
+</div>
+</div>
+</div>
+<!-- ================= CONSTELLATION MAP TAB ================= -->
+<div class="space-y-6" x-data="{ selectedNode: 'SAT-LEO-408', filterType: 'ALL' }" x-show="currentTab === 'Constellation Map'">
+<div class="glass-panel-elevated rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<div>
+<div class="flex items-center space-x-2">
+<span class="bg-primary/20 text-primary text-[10px] uppercase font-mono px-2 py-0.5 rounded border border-primary/30">DEMO DATA</span>
+<span class="text-xs text-on-surface-variant">Interactive Network Explorer &amp; Telemetry Inspector</span>
+</div>
+<h1 class="text-2xl font-bold font-headline text-on-surface mt-1">Constellation Map &amp; Node Inspector</h1>
+</div>
+<div class="flex items-center space-x-2">
+<select class="bg-surface-variant text-on-surface text-xs rounded-lg px-3 py-2 border border-primary/20 focus:ring-primary focus:border-primary" x-model="filterType">
+<option value="ALL">All Nodes (48)</option>
+<option value="LEO">LEO Satellites (32)</option>
+<option value="MEO">MEO Satellites (12)</option>
+<option value="GEO">GEO Satellites (4)</option>
+</select>
+<button class="bg-surface-variant hover:bg-surface-variant/80 text-primary p-2 rounded-lg border border-primary/20">
+<span class="material-symbols-outlined text-sm">zoom_in</span>
+</button>
+<button class="bg-surface-variant hover:bg-surface-variant/80 text-primary p-2 rounded-lg border border-primary/20">
+<span class="material-symbols-outlined text-sm">zoom_out</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Main Canvas / SVG Map -->
+<div class="glass-panel rounded-xl p-6 lg:col-span-2 flex flex-col">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-headline font-bold text-base text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">map</span>
+                Global Projection Grid (Interactive)
+              </h3>
+<div class="flex items-center space-x-2 text-xs">
+<span class="text-on-surface-variant">Layer:</span>
+<span class="bg-primary/20 text-primary px-2 py-0.5 rounded font-mono">Orbits + Inter-Links</span>
+</div>
+</div>
+<!-- Simulated Large Map -->
+<div class="relative w-full h-[500px] rounded-lg overflow-hidden bg-surface-container-lowest border border-primary/10 flex items-center justify-center" data-alt="A detailed panoramic interactive world map with orbital satellite paths, constellation nodes, and ground telemetry links in deep navy and glowing ice-blue Glacier style." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDicnMOLjHBbnYgji877QWiG3dCb8YsKlJSS9_U01wF1T7-AnrcjnyKyPWxnRly7hcj17Otjpc_zKig0Zr3uvWkrme_LUlSrQnN8Vvmw7CQ6FNwmidDBP1884zbnZN6KWQ0ovF6OkVpWYr5FtFJrw20sBLELk3rzd73iWlSa37Frf0dSOCH--8lsG_Ze5AVfgU5lw5FaWEZQenatyV5PcsF_fG0hgIs5CbixrrZWZnxLGv7SWXn-ms_')">
+<div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/15 via-transparent to-surface-container-lowest"></div>
+<!-- Interactive Node Pins -->
+<div @click="selectedNode = 'SAT-LEO-408'" class="absolute top-1/3 left-1/4 cursor-pointer group flex flex-col items-center">
+<div class="w-4 h-4 rounded-full bg-primary animate-ping absolute"></div>
+<div class="w-4 h-4 rounded-full bg-primary border-2 border-surface shadow-[0_0_15px_#7dd3fc]"></div>
+<span class="text-[10px] font-mono text-primary bg-surface/90 px-1.5 py-0.5 rounded mt-1 shadow">SAT-LEO-408</span>
+</div>
+<div @click="selectedNode = 'SAT-MEO-102'" class="absolute top-1/2 left-2/3 cursor-pointer group flex flex-col items-center">
+<div class="w-4 h-4 rounded-full bg-tertiary border-2 border-surface shadow-[0_0_15px_#c8a0f0]"></div>
+<span class="text-[10px] font-mono text-tertiary bg-surface/90 px-1.5 py-0.5 rounded mt-1 shadow">SAT-MEO-102</span>
+</div>
+<div @click="selectedNode = 'GS-SVALBARD'" class="absolute bottom-1/3 left-1/3 cursor-pointer group flex flex-col items-center">
+<div class="w-5 h-5 rounded bg-emerald-400 border-2 border-surface flex items-center justify-center text-[10px] text-background font-bold shadow-[0_0_15px_#34d399]">GS</div>
+<span class="text-[10px] font-mono text-emerald-400 bg-surface/90 px-1.5 py-0.5 rounded mt-1 shadow">GS-SVALBARD</span>
+</div>
+</div>
+<!-- Legend & Controls footer -->
+<div class="mt-4 flex flex-wrap items-center justify-between text-xs text-on-surface-variant">
+<div class="flex items-center space-x-4">
+<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-primary"></span> LEO Nodes</span>
+<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-tertiary"></span> MEO Nodes</span>
+<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Ground Stations</span>
+</div>
+<span class="font-mono text-primary">Click any node to inspect telemetry</span>
+</div>
+</div>
+<!-- Object Inspector Sidebar -->
+<div class="glass-panel rounded-xl p-6 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-center mb-4 pb-2 border-b border-outline/20">
+<h3 class="font-headline font-bold text-base text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">satellite</span>
+                  Object Inspector
+                </h3>
+<span class="bg-primary/20 text-primary text-[10px] font-mono px-2 py-0.5 rounded" x-text="selectedNode"></span>
+</div>
+<!-- Inspector Details based on selection -->
+<div class="space-y-4 text-xs">
+<div>
+<span class="text-on-surface-variant uppercase tracking-wider font-mono">Node Identification</span>
+<div class="text-base font-bold text-primary mt-0.5 font-mono" x-text="selectedNode"></div>
+<div class="text-on-surface-variant text-[11px] mt-0.5">Orbit Class: Low Earth Orbit (LEO) - Plane 3</div>
+</div>
+<div class="grid grid-cols-2 gap-2 bg-surface-variant/40 p-3 rounded-lg border border-primary/10 font-mono">
+<div>
+<span class="text-on-surface-variant text-[10px]">ALTITUDE</span>
+<div class="text-sm text-on-surface font-semibold">548.2 km</div>
+</div>
+<div>
+<span class="text-on-surface-variant text-[10px]">INCLINATION</span>
+<div class="text-sm text-on-surface font-semibold">53.0°</div>
+</div>
+<div>
+<span class="text-on-surface-variant text-[10px]">VELOCITY</span>
+<div class="text-sm text-on-surface font-semibold">7.66 km/s</div>
+</div>
+<div>
+<span class="text-on-surface-variant text-[10px]">LATENCY</span>
+<div class="text-sm text-primary font-semibold">18.4 ms</div>
+</div>
+</div>
+<div>
+<span class="text-on-surface-variant uppercase tracking-wider font-mono">Coordinates &amp; Position</span>
+<div class="bg-surface-variant/40 p-2.5 rounded-lg border border-primary/10 mt-1 font-mono text-[11px] space-y-1">
+<div class="flex justify-between"><span class="">Latitude:</span> <span class="text-on-surface">45.213° N</span></div>
+<div class="flex justify-between"><span class="">Longitude:</span> <span class="text-on-surface">12.482° E</span></div>
+<div class="flex justify-between"><span class="">Subpoint:</span> <span class="text-on-surface">Adriatic Basin</span></div>
+</div>
+</div>
+<div>
+<span class="text-on-surface-variant uppercase tracking-wider font-mono">Connected Ground Nodes</span>
+<div class="mt-1 space-y-1.5">
+<div class="bg-surface-variant/50 p-2 rounded flex justify-between items-center border border-primary/10 font-mono">
+<span class="">GS-SVALBARD</span>
+<span class="text-emerald-400 text-[10px]">Active Link</span>
+</div>
+<div class="bg-surface-variant/50 p-2 rounded flex justify-between items-center border border-primary/10 font-mono">
+<span class="">GS-MCURDO</span>
+<span class="text-on-surface-variant text-[10px]">Standby</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-4 border-t border-outline/20 flex gap-2">
+<button class="flex-1 bg-primary hover:bg-primary/90 text-on-primary font-semibold py-2 rounded-lg transition-all">Send Command</button>
+<button class="bg-surface-variant hover:bg-surface-variant/80 text-primary px-3 py-2 rounded-lg border border-primary/20">Logs</button>
+</div>
+</div>
+</div>
+</div>
+<!-- ================= ROUTE PLANNER TAB ================= -->
+<div class="space-y-6" x-data="{ sourceGS: 'GS-SVALBARD', destGS: 'GS-MCURDO', preference: 'latency', calculated: false }" x-show="currentTab === 'Route Planner'">
+<div class="glass-panel-elevated rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<div>
+<div class="flex items-center space-x-2">
+<span class="bg-primary/20 text-primary text-[10px] uppercase font-mono px-2 py-0.5 rounded border border-primary/30">DEMO DATA</span>
+<span class="text-xs text-on-surface-variant">Quantum-Resistant Inter-Satellite Link Route Optimizer</span>
+</div>
+<div class="text-2xl font-bold font-headline text-on-surface mt-1">Route Planner &amp; Hop Calculator</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Configuration Form -->
+<div class="glass-panel rounded-xl p-6 flex flex-col justify-between">
+<div class="space-y-4">
+<h3 class="font-headline font-bold text-base text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">map</span>
+                Routing Parameters
+              </h3>
+<div>
+<label class="block text-xs font-mono text-on-surface-variant mb-1">Source Ground Station</label>
+<select class="w-full bg-surface-variant text-on-surface text-sm rounded-lg p-2.5 border border-primary/20 focus:ring-primary focus:border-primary font-mono" x-model="sourceGS">
+<option value="GS-SVALBARD">GS-SVALBARD (High Arctic)</option>
+<option value="GS-MCURDO">GS-MCURDO (Antarctic)</option>
+<option value="GS-TOKYO">GS-TOKYO (Asia-Pacific)</option>
+<option value="GS-REUS">GS-REUS (European Hub)</option>
+</select>
+</div>
+<div>
+<label class="block text-xs font-mono text-on-surface-variant mb-1">Destination Ground Station</label>
+<select class="w-full bg-surface-variant text-on-surface text-sm rounded-lg p-2.5 border border-primary/20 focus:ring-primary focus:border-primary font-mono" x-model="destGS">
+<option value="GS-MCURDO">GS-MCURDO (Antarctic)</option>
+<option value="GS-SVALBARD">GS-SVALBARD (High Arctic)</option>
+<option value="GS-TOKYO">GS-TOKYO (Asia-Pacific)</option>
+<option value="GS-REUS">GS-REUS (European Hub)</option>
+</select>
+</div>
+<div>
+<label class="block text-xs font-mono text-on-surface-variant mb-1">Planning Preference</label>
+<div class="space-y-2 mt-1">
+<label class="flex items-center space-x-2 text-xs bg-surface-variant/40 p-2.5 rounded-lg border border-primary/10 cursor-pointer">
+<input class="text-primary focus:ring-primary" name="pref" type="radio" value="latency" x-model="preference">
+<span class="text-on-surface font-semibold">Min Latency (Fastest Hop count)</span>
+</label>
+<label class="flex items-center space-x-2 text-xs bg-surface-variant/40 p-2.5 rounded-lg border border-primary/10 cursor-pointer">
+<input class="text-primary focus:ring-primary" name="pref" type="radio" value="availability" x-model="preference">
+<span class="text-on-surface font-semibold">Max Availability &amp; Link Margin</span>
+</label>
+<label class="flex items-center space-x-2 text-xs bg-surface-variant/40 p-2.5 rounded-lg border border-primary/10 cursor-pointer">
+<input class="text-primary focus:ring-primary" name="pref" type="radio" value="quantum" x-model="preference">
+<span class="text-on-surface font-semibold">Secure Quantum-Resistant</span>
+</label>
+</div>
+</div>
+</div>
+<button @click="calculated = true" class="w-full mt-6 bg-primary hover:bg-primary/90 text-on-primary font-semibold py-3 rounded-lg transition-all flex items-center justify-center space-x-2">
+<span class="material-symbols-outlined">route</span>
+<span class="">Calculate Optimal Route</span>
+</button>
+</div>
+<!-- Results & Hop Sequence -->
+<div class="glass-panel rounded-xl p-6 lg:col-span-2 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-center mb-4 pb-2 border-b border-outline/20">
+<h3 class="font-headline font-bold text-base text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">hub</span>
+                  Hop Results &amp; Rationale
+                </h3>
+<span class="bg-primary/20 text-primary text-[10px] font-mono px-2 py-0.5 rounded">DEMO CALCULATION</span>
+</div>
+<template x-if="!calculated">
+<div class="h-64 flex flex-col items-center justify-center text-center text-on-surface-variant">
+<span class="material-symbols-outlined text-4xl text-primary/40 mb-2">network_node</span>
+<p class="text-sm">Configure parameters and click "Calculate Optimal Route" to generate optical inter-satellite links.</p>
+</div>
+</template>
+<template x-if="calculated">
+<div class="space-y-4">
+<div class="grid grid-cols-3 gap-3 bg-surface-variant/50 p-4 rounded-xl border border-primary/20 font-mono text-center">
+<div>
+<span class="text-[10px] text-on-surface-variant uppercase">Total Estimated Latency</span>
+<div class="text-xl font-bold text-primary mt-1">32.4 ms</div>
+</div>
+<div>
+<span class="text-[10px] text-on-surface-variant uppercase">Hop Count</span>
+<div class="text-xl font-bold text-on-surface mt-1">4 Nodes</div>
+</div>
+<div>
+<span class="text-[10px] text-on-surface-variant uppercase">Link Security</span>
+<div class="text-xl font-bold text-tertiary mt-1">QKD-AES256</div>
+</div>
+</div>
+<div>
+<span class="text-xs text-on-surface-variant uppercase tracking-wider font-mono">Step-by-Step Hop Sequence</span>
+<div class="mt-2 space-y-2">
+<div class="bg-surface-variant/40 p-3 rounded-lg border border-primary/10 flex items-center justify-between font-mono text-xs">
+<div class="flex items-center space-x-3">
+<span class="w-6 h-6 rounded-full bg-emerald-400 text-background font-bold flex items-center justify-center text-[10px]">1</span>
+<div>
+<span class="text-on-surface font-semibold" x-text="sourceGS"></span>
+<div class="text-[10px] text-on-surface-variant">Ground Station Uplink</div>
+</div>
+</div>
+<span class="text-primary">4.2 ms</span>
+</div>
+<div class="bg-surface-variant/40 p-3 rounded-lg border border-primary/10 flex items-center justify-between font-mono text-xs">
+<div class="flex items-center space-x-3">
+<span class="w-6 h-6 rounded-full bg-primary text-background font-bold flex items-center justify-center text-[10px]">2</span>
+<div>
+<span class="text-on-surface font-semibold">SAT-LEO-408</span>
+<div class="text-[10px] text-on-surface-variant">Optical Intersatellite Crosslink</div>
+</div>
+</div>
+<span class="text-primary">8.1 ms</span>
+</div>
+<div class="bg-surface-variant/40 p-3 rounded-lg border border-primary/10 flex items-center justify-between font-mono text-xs">
+<div class="flex items-center space-x-3">
+<span class="w-6 h-6 rounded-full bg-tertiary text-background font-bold flex items-center justify-center text-[10px]">3</span>
+<div>
+<span class="text-on-surface font-semibold">SAT-MEO-102</span>
+<div class="text-[10px] text-on-surface-variant">MEO Relay Node</div>
+</div>
+</div>
+<span class="text-primary">12.6 ms</span>
+</div>
+<div class="bg-surface-variant/40 p-3 rounded-lg border border-primary/10 flex items-center justify-between font-mono text-xs">
+<div class="flex items-center space-x-3">
+<span class="w-6 h-6 rounded-full bg-emerald-400 text-background font-bold flex items-center justify-center text-[10px]">4</span>
+<div>
+<span class="text-on-surface font-semibold" x-text="destGS"></span>
+<div class="text-[10px] text-on-surface-variant">Destination Downlink</div>
+</div>
+</div>
+<span class="text-primary">7.5 ms</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-variant/30 p-3.5 rounded-lg border border-primary/10 text-xs">
+<span class="text-primary font-semibold">Recommendation Rationale:</span>
+<p class="text-on-surface-variant mt-1">Route selected avoids active solar storm ionospheric disturbance zone over equatorial Pacific, guaranteeing 99.99% packet delivery success rate.</p>
+</div>
+</div>
+</template>
+</div>
+<div class="pt-4 border-t border-outline/20 flex justify-end">
+<button class="bg-surface-variant hover:bg-surface-variant/80 text-primary px-4 py-2 rounded-lg text-xs font-semibold border border-primary/20">Export Routing Matrix</button>
+</div>
+</div>
+</div>
+</div>
+<!-- ================= SIMULATION LAB TAB ================= -->
+<div class="space-y-6" x-data="{ scenario: 'Solar Storm', running: false, progress: 42 }" x-show="currentTab === 'Simulation Lab'">
+<div class="glass-panel-elevated rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<div>
+<div class="flex items-center space-x-2">
+<span class="bg-primary/20 text-primary text-[10px] uppercase font-mono px-2 py-0.5 rounded border border-primary/30">DEMO DATA</span>
+<span class="text-xs text-on-surface-variant">Orbital Dynamics &amp; Anomaly Stress Testing Laboratory</span>
+</div>
+<div class="text-2xl font-bold font-headline text-on-surface mt-1">Simulation Lab &amp; Stress Testing</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Simulation Controls -->
+<div class="glass-panel rounded-xl p-6 flex flex-col justify-between">
+<div class="space-y-4">
+<h3 class="font-headline font-bold text-base text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">science</span>
+                Scenario Configuration
+              </h3>
+<div>
+<label class="block text-xs font-mono text-on-surface-variant mb-1">Select Scenario</label>
+<select class="w-full bg-surface-variant text-on-surface text-sm rounded-lg p-2.5 border border-primary/20 focus:ring-primary focus:border-primary font-mono" x-model="scenario">
+<option value="Solar Storm">Solar Storm Ionospheric Disruption</option>
+<option value="Debris Conjunction">High-Density Orbital Debris Conjunction</option>
+<option value="Traffic Spike">Peak Traffic Load Spike (500% surge)</option>
+</select>
+</div>
+<div class="bg-surface-variant/40 p-3 rounded-lg border border-primary/10 text-xs space-y-2">
+<span class="font-semibold text-primary">Scenario Parameters:</span>
+<div class="flex justify-between text-on-surface-variant"><span class="">Intensity:</span> <span class="font-mono text-on-surface">Kp Index 8.4 (Severe)</span></div>
+<div class="flex justify-between text-on-surface-variant"><span class="">Affected Area:</span> <span class="font-mono text-on-surface">Polar Caps &amp; Northern LEO</span></div>
+<div class="flex justify-between text-on-surface-variant"><span class="">Duration:</span> <span class="font-mono text-on-surface">120 Minutes</span></div>
+</div>
+<div>
+<label class="block text-xs font-mono text-on-surface-variant mb-1">Simulation Progress</label>
+<div class="w-full bg-surface-variant h-3 rounded-full overflow-hidden border border-primary/20">
+<div :style="`width: ${progress}%`" class="bg-primary h-full transition-all duration-300"></div>
+</div>
+<div class="flex justify-between text-[11px] text-on-surface-variant font-mono mt-1">
+<span class="">Elapsed: 50m 24s</span>
+<span x-text="`${progress}% Completed`"></span>
+</div>
+</div>
+</div>
+<div class="pt-6 border-t border-outline/20 flex gap-2">
+<button :class="running ? 'bg-error text-on-error' : 'bg-primary text-on-primary'" @click="running = !running" class="flex-1 font-semibold py-2.5 rounded-lg transition-all flex items-center justify-center space-x-2">
+<span class="material-symbols-outlined" x-text="running ? 'pause' : 'play_arrow'"></span>
+<span x-text="running ? 'Pause Simulation' : 'Start Simulation'"></span>
+</button>
+<button @click="progress = 0; running = false" class="bg-surface-variant hover:bg-surface-variant/80 text-primary px-3 py-2.5 rounded-lg border border-primary/20">
+<span class="material-symbols-outlined">restart_alt</span>
+</button>
+</div>
+</div>
+<!-- Simulation Metrics & Charts -->
+<div class="glass-panel rounded-xl p-6 lg:col-span-2 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-center mb-4 pb-2 border-b border-outline/20">
+<h3 class="font-headline font-bold text-base text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">analytics</span>
+                  Real-Time Stress Metrics
+                </h3>
+<span class="bg-primary/20 text-primary text-[10px] font-mono px-2 py-0.5 rounded">DEMO DATA STREAM</span>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+<div class="bg-surface-variant/50 p-3 rounded-lg border border-primary/10">
+<span class="text-[10px] font-mono text-on-surface-variant">PACKET LOSS</span>
+<div class="text-lg font-bold text-error mt-1">1.42%</div>
+</div>
+<div class="bg-surface-variant/50 p-3 rounded-lg border border-primary/10">
+<span class="text-[10px] font-mono text-on-surface-variant">REROUTE EVENTS</span>
+<div class="text-lg font-bold text-primary mt-1">38 / min</div>
+</div>
+<div class="bg-surface-variant/50 p-3 rounded-lg border border-primary/10">
+<span class="text-[10px] font-mono text-on-surface-variant">POWER DRAIN</span>
+<div class="text-lg font-bold text-tertiary mt-1">+14.2%</div>
+</div>
+<div class="bg-surface-variant/50 p-3 rounded-lg border border-primary/10">
+<span class="text-[10px] font-mono text-on-surface-variant">SLA COMPLIANCE</span>
+<div class="text-lg font-bold text-emerald-400 mt-1">98.9%</div>
+</div>
+</div>
+<!-- Simulated Chart Box -->
+<div class="space-y-2">
+<span class="text-xs text-on-surface-variant uppercase tracking-wider font-mono">Latency Spike Distribution Curve</span>
+<div class="w-full h-48 bg-surface-container-lowest rounded-lg border border-primary/10 p-4 flex items-end justify-between space-x-2">
+<!-- Bar items -->
+<div class="w-full bg-primary/20 hover:bg-primary/40 rounded-t transition-all flex flex-col justify-end items-center pb-2" style="height: 40%">
+<span class="text-[9px] font-mono text-primary">12ms</span>
+</div>
+<div class="w-full bg-primary/30 hover:bg-primary/50 rounded-t transition-all flex flex-col justify-end items-center pb-2" style="height: 65%">
+<span class="text-[9px] font-mono text-primary">24ms</span>
+</div>
+<div class="w-full bg-error/40 hover:bg-error/60 rounded-t transition-all flex flex-col justify-end items-center pb-2" style="height: 95%">
+<span class="text-[9px] font-mono text-error">88ms</span>
+</div>
+<div class="w-full bg-primary/40 hover:bg-primary/60 rounded-t transition-all flex flex-col justify-end items-center pb-2" style="height: 70%">
+<span class="text-[9px] font-mono text-primary">31ms</span>
+</div>
+<div class="w-full bg-primary/20 hover:bg-primary/40 rounded-t transition-all flex flex-col justify-end items-center pb-2" style="height: 45%">
+<span class="text-[9px] font-mono text-primary">15ms</span>
+</div>
+<div class="w-full bg-primary/30 hover:bg-primary/50 rounded-t transition-all flex flex-col justify-end items-center pb-2" style="height: 55%">
+<span class="text-[9px] font-mono text-primary">19ms</span>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-4 border-t border-outline/25 flex justify-between items-center text-xs text-on-surface-variant">
+<span class="">Simulation Engine: FastAPI WebSockets (Mocked)</span>
+<button class="text-primary hover:underline">Download Telemetry CSV</button>
+</div>
+</div>
+</div>
+</div>
+<!-- ================= ACTIVITY LOG TAB ================= -->
+<div class="space-y-6" x-data="{ search: '', severity: 'ALL' }" x-show="currentTab === 'Activity Log'">
+<div class="glass-panel-elevated rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<div>
+<div class="flex items-center space-x-2">
+<span class="bg-primary/20 text-primary text-[10px] uppercase font-mono px-2 py-0.5 rounded border border-primary/30">DEMO DATA</span>
+<span class="text-xs text-on-surface-variant">Immutable System Event Timeline &amp; Telemetry Audit Log</span>
+</div>
+<div class="text-2xl font-bold font-headline text-on-surface mt-1">Activity Log &amp; Event Timeline</div>
+</div>
+<div class="flex items-center space-x-2 w-full md:w-auto">
+<input class="bg-surface-variant text-on-surface text-xs rounded-lg px-3 py-2 border border-primary/20 focus:ring-primary focus:border-primary w-full md:w-64 font-mono" placeholder="Search events..." type="text" x-model="search">
+<select class="bg-surface-variant text-on-surface text-xs rounded-lg px-3 py-2 border border-primary/20 focus:ring-primary focus:border-primary font-mono" x-model="severity">
+<option value="ALL">All Severities</option>
+<option value="INFO">INFO</option>
+<option value="WARN">WARN</option>
+<option value="ERROR">ERROR</option>
+</select>
+</div>
+</div>
+<div class="glass-panel rounded-xl p-6">
+<div class="space-y-3 font-mono text-xs">
+<!-- Log item 1 -->
+<div class="bg-surface-variant/40 p-3.5 rounded-lg border border-primary/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+<div class="flex items-start space-x-3">
+<span class="px-2 py-0.5 rounded bg-error/20 text-error font-bold text-[10px] mt-0.5">ERROR</span>
+<div>
+<div class="text-on-surface font-bold">[ORBIT-04] Conjunction warning trajectory shift for SAT-LEO-219</div>
+<div class="text-[11px] text-on-surface-variant mt-0.5">Category: Collision Avoidance • Node: SAT-LEO-219 • Avoidance burn queued successfully.</div>
+</div>
+</div>
+<span class="text-on-surface-variant text-[11px]">14:42:01 UTC</span>
+</div>
+<!-- Log item 2 -->
+<div class="bg-surface-variant/40 p-3.5 rounded-lg border border-primary/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+<div class="flex items-start space-x-3">
+<span class="px-2 py-0.5 rounded bg-primary/20 text-primary font-bold text-[10px] mt-0.5">INFO</span>
+<div>
+<div class="text-on-surface font-bold">[GS-SYNC] Ground station Svalbard primary downlink link re-established</div>
+<div class="text-[11px] text-on-surface-variant mt-0.5">Category: Ground Station • Node: GS-SVALBARD • Bit rate stabilized at 42.5 Gbps.</div>
+</div>
+</div>
+<span class="text-on-surface-variant text-[11px]">14:38:15 UTC</span>
+</div>
+<!-- Log item 3 -->
+<div class="bg-surface-variant/40 p-3.5 rounded-lg border border-primary/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+<div class="flex items-start space-x-3">
+<span class="px-2 py-0.5 rounded bg-tertiary/20 text-tertiary font-bold text-[10px] mt-0.5">INFO</span>
+<div>
+<div class="text-on-surface font-bold">[ROUTE] Quantum-resistant encryption keys rotated across MEO nodes</div>
+<div class="text-[11px] text-on-surface-variant mt-0.5">Category: Security • Node: Global MEO Cluster • QKD protocol active.</div>
+</div>
+</div>
+<span class="text-on-surface-variant text-[11px]">14:30:00 UTC</span>
+</div>
+<!-- Log item 4 -->
+<div class="bg-surface-variant/40 p-3.5 rounded-lg border border-primary/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+<div class="flex items-start space-x-3">
+<span class="px-2 py-0.5 rounded bg-primary/20 text-primary font-bold text-[10px] mt-0.5">INFO</span>
+<div>
+<div class="text-on-surface font-bold">[PROPULSION] Station-keeping orbital burn completed for SAT-LEO-408</div>
+<div class="text-[11px] text-on-surface-variant mt-0.5">Category: Propulsion • Node: SAT-LEO-408 • Delta-V expended: 1.2 m/s.</div>
+</div>
+</div>
+<span class="text-on-surface-variant text-[11px]">14:15.22 UTC</span>
+</div>
+</div>
+</div>
+</div>
+<!-- ================= SETTINGS TAB ================= -->
+<div class="space-y-6" x-show="currentTab === 'Settings'">
+<div class="glass-panel-elevated rounded-xl p-6">
+<h1 class="text-2xl font-bold font-headline text-on-surface">Operations Center Settings</h1>
+<p class="text-sm text-on-surface-variant mt-1">Configure global telemetry feeds, API connection parameters, and authentication tokens.</p>
+</div>
+<div class="glass-panel rounded-xl p-6 space-y-4">
+<h3 class="font-headline font-bold text-base text-on-surface">FastAPI Client Connection</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<label class="block text-xs font-mono text-on-surface-variant mb-1">Backend Endpoint URL</label>
+<input class="w-full bg-surface-variant text-on-surface text-sm rounded-lg p-2.5 border border-primary/20 font-mono" type="text" value="https://api.prioritysat.orbital/v4/telemetry">
+</div>
+<div>
+<label class="block text-xs font-mono text-on-surface-variant mb-1">Polling Interval</label>
+<select class="w-full bg-surface-variant text-on-surface text-sm rounded-lg p-2.5 border border-primary/20 font-mono">
+<option>1000 ms (Real-time)</option>
+<option>5000 ms (Standard)</option>
+<option>15000 ms (Low Bandwidth)</option>
+</select>
+</div>
+</div>
+<div class="pt-4 flex justify-end">
+<button class="bg-primary text-on-primary font-semibold px-4 py-2 rounded-lg text-sm">Save Configuration</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- API Payload Inspector Modal / Drawer -->
+<div class="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4" x-show="apiInspectorOpen">
+
+</div>
+
+
+</body></html>
